@@ -2,9 +2,6 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	_ "github.com/realahsanshah/slack_clone/cmd/docs" // This is important!
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // PingResponse represents the response for the ping endpoint
@@ -30,9 +27,6 @@ func SetupRouter() *gin.Engine {
 			Message: "pong",
 		})
 	})
-
-	// Swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return router
 }
