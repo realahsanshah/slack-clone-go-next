@@ -56,14 +56,11 @@ func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams
 }
 
 const getUserJoinedWorkspaces = `-- name: GetUserJoinedWorkspaces :many
-SELECT w.id, w.name, w.username, w.logo, w.member_count, w.user_id, w.created_at, w.updated_at, w.deleted_at, wm.status FROM workspaces w
-LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
-WHERE id IN (
-    SELECT wm.workspace_id FROM workspace_members wm
-    WHERE wm.user_id = $1 AND wm.status IN ('accepted', 'pending')
-    AND wm.deleted_at IS NULL
-    AND wm.workspace_id = w.id
-)
+SELECT w.id, w.name, w.username, w.logo, w.member_count, w.user_id, w.created_at, w.updated_at, w.deleted_at
+FROM workspaces w
+INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+WHERE wm.user_id = $1 AND wm.status IN ('accepted', 'pending')
+AND wm.deleted_at IS NULL
 ORDER BY w.created_at DESC
 LIMIT $2
 OFFSET $3
