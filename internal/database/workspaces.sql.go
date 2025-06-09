@@ -14,19 +14,17 @@ import (
 
 const createWorkspace = `-- name: CreateWorkspace :one
 INSERT INTO workspaces(
-    id,
     name,
     username,
     logo,
     member_count,
     user_id
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5
 ) RETURNING id, name, username, logo, member_count, user_id, created_at, updated_at, deleted_at
 `
 
 type CreateWorkspaceParams struct {
-	ID          uuid.UUID
 	Name        string
 	Username    string
 	Logo        sql.NullString
@@ -36,7 +34,6 @@ type CreateWorkspaceParams struct {
 
 func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams) (Workspace, error) {
 	row := q.db.QueryRowContext(ctx, createWorkspace,
-		arg.ID,
 		arg.Name,
 		arg.Username,
 		arg.Logo,

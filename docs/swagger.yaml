@@ -241,12 +241,12 @@ paths:
       - default: 1
         description: Page number
         in: query
-        name: page
+        name: Page
         type: integer
       - default: 10
         description: Limit per page
         in: query
-        name: limit
+        name: Limit
         type: integer
       produces:
       - application/json
@@ -308,6 +308,10 @@ paths:
             $ref: '#/definitions/middleware.APIResponse'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "409":
+          description: Workspace username already exists
           schema:
             $ref: '#/definitions/middleware.APIResponse'
         "500":

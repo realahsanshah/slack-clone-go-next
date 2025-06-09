@@ -225,14 +225,14 @@ const docTemplate = `{
                         "type": "integer",
                         "default": 1,
                         "description": "Page number",
-                        "name": "page",
+                        "name": "Page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "default": 10,
                         "description": "Limit per page",
-                        "name": "limit",
+                        "name": "Limit",
                         "in": "query"
                     }
                 ],
@@ -333,6 +333,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Workspace username already exists",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
