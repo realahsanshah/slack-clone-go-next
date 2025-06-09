@@ -1,2 +1,5 @@
 .env
 vendor
+*.log.*
+build
+*.exe
