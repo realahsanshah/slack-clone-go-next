@@ -57,4 +57,8 @@ func main() {
 	fmt.Printf("Server is running on port %s\n", port)
 	fmt.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html\n", port)
 	router.Run(":" + port)
+
+	// input press any key to exit
+	fmt.Println("Press any key to exit")
+	fmt.Scanln()
 }
