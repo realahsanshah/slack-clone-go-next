@@ -2,8 +2,9 @@ FROM golang:1.24-alpine
 
 WORKDIR /app
 
-# Install air for hot reload
+# Install air for hot reload and swag for API documentation
 RUN go install github.com/air-verse/air@v1.62.0
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./

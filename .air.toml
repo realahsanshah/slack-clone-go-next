@@ -1,9 +1,10 @@
 # .air.toml
 [build]
+  pre_cmd = ["swag init -g cmd/main.go -o ./docs"]
   cmd = "go run cmd/main.go"
   bin = "tmp/main"
   include_ext = ["go"]
-  exclude_dir = ["assets", "tmp", "vendor"]
+  exclude_dir = ["assets", "tmp", "vendor", "docs"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   follow_symlink = true

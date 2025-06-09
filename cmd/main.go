@@ -8,6 +8,10 @@
 // @contact.email support@slackclone.com
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 package main
 
@@ -16,6 +20,8 @@ import (
 	"log"
 	"os"
 
+	_ "slack-clone-go-next/docs" // Import generated docs
+	"slack-clone-go-next/internal/database"
 	"slack-clone-go-next/router"
 
 	"github.com/joho/godotenv"
@@ -23,12 +29,24 @@ import (
 
 func main() {
 	fmt.Println("Starting server...")
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file", err)
+		log.Println("Warning: .env file not found, using default environment variables")
 	}
 
-	fmt.Println("Hello, World!")
+	// Initialize database (skip if SKIP_DB=true for testing)
+	if os.Getenv("SKIP_DB") != "true" {
+		if err := database.InitDB(); err != nil {
+			log.Printf("Database connection failed: %v", err)
+			log.Println("To skip database and test server only, set SKIP_DB=true in environment")
+			log.Fatal("Exiting due to database connection failure")
+		}
+		defer database.CloseDB()
+		fmt.Println("Database connected successfully")
+	} else {
+		fmt.Println("Skipping database connection (SKIP_DB=true)")
+	}
+
 	router := router.SetupRouter()
 
 	port := os.Getenv("PORT")
@@ -36,6 +54,11 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Println("Server is running on port", port)
+	fmt.Printf("Server is running on port %s\n", port)
+	fmt.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html\n", port)
 	router.Run(":" + port)
+
+	// input press any key to exit
+	fmt.Println("Press any key to exit")
+	fmt.Scanln()
 }

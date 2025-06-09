@@ -1,0 +1,428 @@
+basePath: /api/v1
+definitions:
+  middleware.APIResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data: {}
+      error:
+        example: Error description
+        type: string
+      message:
+        example: Operation completed successfully
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.AuthResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.CreateWorkspaceRequest:
+    properties:
+      logo:
+        example: https://example.com/logo.png
+        format: uri
+        type: string
+      name:
+        example: John Doe
+        maxLength: 50
+        minLength: 2
+        type: string
+      username:
+        example: john.doe
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - logo
+    - name
+    - username
+    type: object
+  models.JoinWorkspaceRequest:
+    properties:
+      workspace_id:
+        example: "1"
+        type: string
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        format: email
+        type: string
+      password:
+        example: securepassword123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.RegisterRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        format: email
+        type: string
+      name:
+        example: John Doe
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        example: securepassword123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  models.User:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: "1"
+        type: string
+      name:
+        example: John Doe
+        type: string
+    type: object
+  models.Workspace:
+    properties:
+      id:
+        example: "1"
+        type: string
+      logo:
+        example: https://example.com/logo.png
+        format: uri
+        type: string
+      member_count:
+        example: 10
+        type: integer
+      name:
+        example: John Doe
+        type: string
+      status:
+        example: pending
+        type: string
+      user_id:
+        example: "1"
+        type: string
+      username:
+        example: john.doe
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@slackclone.com
+    name: API Support
+  description: This is a backend for a Slack clone with chat, audio/video calling.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Slack Clone API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.AuthResponse'
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: User login
+      tags:
+      - auth
+  /auth/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get the current authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with email and password
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.AuthResponse'
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "409":
+          description: User with this email already exists
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /workspaces:
+    get:
+      consumes:
+      - application/json
+      description: Gets all workspaces for the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: Page
+        type: integer
+      - default: 10
+        description: Limit per page
+        in: query
+        name: Limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Workspaces fetched successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Workspace'
+                  type: array
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get workspaces
+      tags:
+      - workspaces
+    post:
+      consumes:
+      - application/json
+      description: Creates a new workspace for the authenticated user
+      parameters:
+      - description: Workspace data
+        in: body
+        name: workspace
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Workspace created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Workspace'
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "409":
+          description: Workspace username already exists
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new workspace
+      tags:
+      - workspaces
+  /workspaces/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Gets a workspace by id
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Workspace fetched successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Workspace'
+              type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Workspace not found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get workspace by id
+      tags:
+      - workspaces
+  /workspaces/join:
+    post:
+      consumes:
+      - application/json
+      description: Joins a workspace for the authenticated user
+      parameters:
+      - description: Workspace data
+        in: body
+        name: workspace
+        required: true
+        schema:
+          $ref: '#/definitions/models.JoinWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Workspace joined successfully
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Workspace not found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Join a workspace
+      tags:
+      - workspaces
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

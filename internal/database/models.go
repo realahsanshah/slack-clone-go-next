@@ -5,14 +5,127 @@
 package database
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
+type MemberRole string
+
+const (
+	MemberRoleAdmin  MemberRole = "admin"
+	MemberRoleMember MemberRole = "member"
+)
+
+func (e *MemberRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MemberRole(s)
+	case string:
+		*e = MemberRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MemberRole: %T", src)
+	}
+	return nil
+}
+
+type NullMemberRole struct {
+	MemberRole MemberRole
+	Valid      bool // Valid is true if MemberRole is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMemberRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.MemberRole, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MemberRole.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMemberRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MemberRole), nil
+}
+
+type MemberStatus string
+
+const (
+	MemberStatusPending  MemberStatus = "pending"
+	MemberStatusAccepted MemberStatus = "accepted"
+	MemberStatusRejected MemberStatus = "rejected"
+)
+
+func (e *MemberStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MemberStatus(s)
+	case string:
+		*e = MemberStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MemberStatus: %T", src)
+	}
+	return nil
+}
+
+type NullMemberStatus struct {
+	MemberStatus MemberStatus
+	Valid        bool // Valid is true if MemberStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMemberStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.MemberStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MemberStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMemberStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MemberStatus), nil
+}
+
 type User struct {
-	ID        int32
+	ID        uuid.UUID
 	Name      string
 	Email     string
 	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type Workspace struct {
+	ID          uuid.UUID
+	Name        string
+	Username    string
+	Logo        sql.NullString
+	MemberCount int32
+	UserID      uuid.UUID
+	CreatedAt   sql.NullTime
+	UpdatedAt   sql.NullTime
+	DeletedAt   sql.NullTime
+}
+
+type WorkspaceMember struct {
+	ID          uuid.UUID
+	WorkspaceID uuid.UUID
+	UserID      uuid.UUID
+	Status      MemberStatus
+	Role        MemberRole
+	CreatedAt   sql.NullTime
+	UpdatedAt   sql.NullTime
+	DeletedAt   sql.NullTime
 }
