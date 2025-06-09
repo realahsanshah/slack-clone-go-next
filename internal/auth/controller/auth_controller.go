@@ -11,6 +11,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.RegisterRequest true "Registration details"
+// @Success 201 {object} middleware.APIResponse{data=models.AuthResponse} "Registration successful"
+// @Failure 400 {object} middleware.APIResponse "Invalid request data"
+// @Failure 409 {object} middleware.APIResponse "User with this email already exists"
+// @Failure 500 {object} middleware.APIResponse "Internal server error"
+// @Router /auth/register [post]
 func Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -62,6 +74,18 @@ func Register(c *gin.Context) {
 	middleware.SuccessResponse(c, response, "Registration successful", http.StatusCreated)
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticate user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body models.LoginRequest true "Login credentials"
+// @Success 200 {object} middleware.APIResponse{data=models.AuthResponse} "Login successful"
+// @Failure 400 {object} middleware.APIResponse "Invalid request data"
+// @Failure 401 {object} middleware.APIResponse "Invalid credentials"
+// @Failure 500 {object} middleware.APIResponse "Internal server error"
+// @Router /auth/login [post]
 func Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -101,6 +125,17 @@ func Login(c *gin.Context) {
 	middleware.SuccessResponse(c, response, "Login successful", http.StatusOK)
 }
 
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Get the current authenticated user's profile information
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} middleware.APIResponse{data=models.User} "Profile retrieved successfully"
+// @Failure 401 {object} middleware.APIResponse "Unauthorized - invalid or missing token"
+// @Failure 404 {object} middleware.APIResponse "User not found"
+// @Router /auth/profile [get]
 func GetProfile(c *gin.Context) {
 	userEmail, exists := middleware.GetUserEmail(c)
 	if !exists {

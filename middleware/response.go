@@ -9,11 +9,11 @@ import (
 
 // APIResponse represents the standard API response structure
 type APIResponse struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message,omitempty"`
+	Success bool        `json:"success" example:"true"`
+	Message string      `json:"message,omitempty" example:"Operation completed successfully"`
 	Data    interface{} `json:"data,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	Code    int         `json:"code"`
+	Error   string      `json:"error,omitempty" example:"Error description"`
+	Code    int         `json:"code" example:"200"`
 }
 
 // SuccessResponse sends a standardized success response

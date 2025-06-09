@@ -8,6 +8,10 @@
 // @contact.email support@slackclone.com
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 package main
 
@@ -16,6 +20,7 @@ import (
 	"log"
 	"os"
 
+	_ "slack-clone-go-next/docs" // Import generated docs
 	"slack-clone-go-next/internal/database"
 	"slack-clone-go-next/router"
 
@@ -50,5 +55,6 @@ func main() {
 	}
 
 	fmt.Printf("Server is running on port %s\n", port)
+	fmt.Printf("Swagger documentation available at: http://localhost:%s/swagger/index.html\n", port)
 	router.Run(":" + port)
 }

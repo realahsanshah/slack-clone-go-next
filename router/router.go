@@ -6,6 +6,8 @@ import (
 	"slack-clone-go-next/middleware"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // PingResponse represents the response for the ping endpoint
@@ -19,6 +21,9 @@ func SetupRouter() *gin.Engine {
 	// Add global response middleware
 	router.Use(middleware.ResponseMiddleware())
 
+	// Swagger endpoint
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// add base path
 	api := router.Group("/api/v1")
 
@@ -27,7 +32,7 @@ func SetupRouter() *gin.Engine {
 	// @Tags health
 	// @Accept json
 	// @Produce json
-	// @Success 200 {object} middleware.APIResponse
+	// @Success 200 {object} middleware.APIResponse{data=PingResponse} "Health check successful"
 	// @Router /ping [get]
 	api.GET("/ping", func(c *gin.Context) {
 		middleware.SuccessResponse(c, PingResponse{
