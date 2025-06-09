@@ -21,7 +21,7 @@ type AuthResponse struct {
 
 // User represents the user data in responses
 type User struct {
-	ID    int32  `json:"id" example:"1"`
+	ID    string `json:"id" example:"1"`
 	Name  string `json:"name" example:"John Doe"`
 	Email string `json:"email" example:"john.doe@example.com"`
 }

@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 	auth "slack-clone-go-next/internal/auth/routes"
+	workspace "slack-clone-go-next/internal/workspace/routes"
 	"slack-clone-go-next/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -41,8 +42,26 @@ func SetupRouter() *gin.Engine {
 	})
 
 	// add base path for auth routes
+	// @Summary Auth routes
+	// @Description Auth routes
+	// @Tags auth
+	// @Accept json
+	// @Produce json
+	// @Success 200 {object} middleware.APIResponse{data=PingResponse} "Auth routes"
+	// @Router /auth [get]
 	authRoutes := api.Group("/auth")
 	auth.RegisterAuthRoutes(authRoutes)
+
+	// @Summary Workspace routes
+	// @Description Workspace routes
+	// @Tags workspace
+	// @Accept json
+	// @Produce json
+	// @Success 200 {object} middleware.APIResponse{data=PingResponse} "Workspace routes"
+	// @Router /workspaces [get]
+	// add base path for workspace routes
+	workspaceRoutes := api.Group("/workspaces")
+	workspace.RegisterWorkspaceRoutes(workspaceRoutes)
 
 	return router
 }

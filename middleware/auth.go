@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // AuthMiddleware validates JWT tokens
@@ -39,12 +40,12 @@ func AuthMiddleware() gin.HandlerFunc {
 }
 
 // GetUserID gets the user ID from the context
-func GetUserID(c *gin.Context) (int32, bool) {
+func GetUserID(c *gin.Context) (uuid.UUID, bool) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		return 0, false
+		return uuid.UUID{}, false
 	}
-	return userID.(int32), true
+	return userID.(uuid.UUID), true
 }
 
 // GetUserEmail gets the user email from the context

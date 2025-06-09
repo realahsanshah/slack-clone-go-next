@@ -65,7 +65,7 @@ func Register(c *gin.Context) {
 	response := models.AuthResponse{
 		Token: token,
 		User: models.User{
-			ID:    user.ID,
+			ID:    user.ID.String(),
 			Name:  user.Name,
 			Email: user.Email,
 		},
@@ -116,7 +116,7 @@ func Login(c *gin.Context) {
 	response := models.AuthResponse{
 		Token: token,
 		User: models.User{
-			ID:    user.ID,
+			ID:    user.ID.String(),
 			Name:  user.Name,
 			Email: user.Email,
 		},
@@ -151,7 +151,7 @@ func GetProfile(c *gin.Context) {
 	}
 
 	userProfile := models.User{
-		ID:    user.ID,
+		ID:    user.ID.String(),
 		Name:  user.Name,
 		Email: user.Email,
 	}
