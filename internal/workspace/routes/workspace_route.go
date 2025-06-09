@@ -13,5 +13,7 @@ func RegisterWorkspaceRoutes(router *gin.RouterGroup) {
 	{
 		protected.POST("/", controller.CreateWorkspace)
 		protected.GET("/", controller.GetWorkspaces)
+		protected.POST("/join", controller.JoinWorkspace)
+		protected.GET("/:id", controller.GetWorkspaceById)
 	}
 }

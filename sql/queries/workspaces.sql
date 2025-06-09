@@ -21,3 +21,22 @@ WHERE user_id = $1
 ORDER BY created_at DESC
 LIMIT $2
 OFFSET $3;
+
+-- name: GetUserJoinedWorkspaces :many
+SELECT w.*, wm.status, wm.role, wm.created_at, wm.updated_at, wm.deleted_at FROM workspaces w
+LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
+WHERE wm.user_id = $1 AND wm.status IN ('accepted', 'pending')
+AND wm.deleted_at IS NULL
+ORDER BY w.created_at DESC
+LIMIT $2
+OFFSET $3;
+
+-- name: JoinWorkspace :one
+INSERT INTO workspace_members (
+    workspace_id,
+    user_id,
+    status,
+    role
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING *;

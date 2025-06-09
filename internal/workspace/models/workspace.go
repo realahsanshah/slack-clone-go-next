@@ -11,6 +11,15 @@ type Workspace struct {
 	Logo        string `json:"logo" example:"https://example.com/logo.png" format:"uri"`
 	MemberCount int    `json:"member_count" example:"10"`
 	UserID      string `json:"user_id" example:"1"`
+	Status      string `json:"status" example:"pending"`
+}
+
+type WorkspaceMember struct {
+	ID          string `json:"id" example:"1"`
+	WorkspaceID string `json:"workspace_id" example:"1"`
+	UserID      string `json:"user_id" example:"1"`
+	Status      string `json:"status" example:"pending"`
+	Role        string `json:"role" example:"member"`
 }
 
 type CreateWorkspaceRequest struct {
@@ -19,9 +28,17 @@ type CreateWorkspaceRequest struct {
 	Logo     string `json:"logo" binding:"required,url" example:"https://example.com/logo.png" format:"uri"`
 }
 
+type JoinWorkspaceRequest struct {
+	WorkspaceID string `json:"workspace_id" example:"1"`
+}
+
 type GetWorkspacesRequest struct {
 	Page  int `json:"page" binding:"required,min=1" example:"1" format:"int32"`
 	Limit int `json:"limit" binding:"required,min=1,max=100" example:"10" format:"int32"`
+}
+
+type GetWorkspaceMembersRequest struct {
+	WorkspaceID string `json:"workspace_id" example:"1"`
 }
 
 // DatabaseWorkspaceToWorkspace converts database.Workspace to models.Workspace
@@ -43,4 +60,24 @@ func DatabaseWorkspacesToWorkspaces(dbWorkspaces []database.Workspace) []Workspa
 		workspaces[i] = DatabaseWorkspaceToWorkspace(dbWorkspace)
 	}
 	return workspaces
+}
+
+// DatabaseWorkspaceMemberToWorkspaceMember converts database.WorkspaceMember to models.WorkspaceMember
+func DatabaseWorkspaceMemberToWorkspaceMember(dbWorkspaceMember database.WorkspaceMember) WorkspaceMember {
+	return WorkspaceMember{
+		ID:          dbWorkspaceMember.ID.String(),
+		WorkspaceID: dbWorkspaceMember.WorkspaceID.String(),
+		UserID:      dbWorkspaceMember.UserID.String(),
+		Status:      string(dbWorkspaceMember.Status),
+		Role:        string(dbWorkspaceMember.Role),
+	}
+}
+
+// DatabaseWorkspaceMembersToWorkspaceMembers converts []database.WorkspaceMember to []models.WorkspaceMember
+func DatabaseWorkspaceMembersToWorkspaceMembers(dbWorkspaceMembers []database.WorkspaceMember) []WorkspaceMember {
+	workspaceMembers := make([]WorkspaceMember, len(dbWorkspaceMembers))
+	for i, dbWorkspaceMember := range dbWorkspaceMembers {
+		workspaceMembers[i] = DatabaseWorkspaceMemberToWorkspaceMember(dbWorkspaceMember)
+	}
+	return workspaceMembers
 }

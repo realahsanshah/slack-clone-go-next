@@ -55,6 +55,59 @@ func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams
 	return i, err
 }
 
+const getUserJoinedWorkspaces = `-- name: GetUserJoinedWorkspaces :many
+SELECT w.id, w.name, w.username, w.logo, w.member_count, w.user_id, w.created_at, w.updated_at, w.deleted_at, wm.status FROM workspaces w
+LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
+WHERE id IN (
+    SELECT wm.workspace_id FROM workspace_members wm
+    WHERE wm.user_id = $1 AND wm.status IN ('accepted', 'pending')
+    AND wm.deleted_at IS NULL
+    AND wm.workspace_id = w.id
+)
+ORDER BY w.created_at DESC
+LIMIT $2
+OFFSET $3
+`
+
+type GetUserJoinedWorkspacesParams struct {
+	UserID uuid.UUID
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetUserJoinedWorkspaces(ctx context.Context, arg GetUserJoinedWorkspacesParams) ([]Workspace, error) {
+	rows, err := q.db.QueryContext(ctx, getUserJoinedWorkspaces, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Workspace
+	for rows.Next() {
+		var i Workspace
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Username,
+			&i.Logo,
+			&i.MemberCount,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getWorkspaceById = `-- name: GetWorkspaceById :one
 SELECT id, name, username, logo, member_count, user_id, created_at, updated_at, deleted_at FROM workspaces WHERE id = $1
 `
