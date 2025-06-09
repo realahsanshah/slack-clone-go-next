@@ -53,6 +53,17 @@ catch {
     exit 1
 }
 
+# PORT=8080
+# JWT_SECRET=jwt_secret
+# Check if the .env file exists
+if (-not (Test-Path -Path ".env")) {
+    # Create a .env file with the default values
+    Write-Status "Creating .env file..."
+    New-Item -Path ".env" -ItemType File -Value "PORT=8080`nJWT_SECRET=jwt_secret"
+    Write-Status ".env file created successfully."
+    Write-Status "Please edit the .env file with the correct values."
+}
+
 # Determine mode
 $Mode = "dev"
 if ($Prod -or $Production) {

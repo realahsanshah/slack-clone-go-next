@@ -19,9 +19,19 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Check if the .env file exists
+if [ ! -f ".env" ]; then
+    print_status "Creating .env file..."
+    echo "PORT=8080" > .env
+    echo "JWT_SECRET=jwt_secret" >> .env
+    print_status ".env file created successfully."
+fi
+
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
     print_error "Docker is not running. Please start Docker and try again."
+    read -n 1 -s -r -p "Press any key to continue..."
+    echo ""
     exit 1
 fi
 
@@ -57,11 +67,19 @@ while [[ $# -gt 0 ]]; do
             echo "  $0                     # Deploy in development mode"
             echo "  $0 --prod              # Deploy in production mode"
             echo "  $0 --dev --cache       # Deploy in dev mode with cache"
+            echo ""
+            echo "Press any key to continue..."
+            read -n 1 -s -r -p ""
+            echo ""
             exit 0
             ;;
         *)
             print_error "Unknown option: $1"
             echo "Use --help for usage information."
+            echo ""
+            echo "Press any key to continue..."
+            read -n 1 -s -r -p ""
+            echo ""
             exit 1
             ;;
     esac
@@ -93,7 +111,7 @@ if [ "$MODE" = "prod" ]; then
 else
     print_status "Building and starting development services..."
     docker-compose build $BUILD_CACHE api-dev
-    docker-compose up -d postgres api-dev
+    docker-compose up postgres api-dev
     
     print_status "Development deployment complete!"
     print_status "API available at: http://localhost:8080"
