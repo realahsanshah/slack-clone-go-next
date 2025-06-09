@@ -2,9 +2,11 @@ FROM golang:1.24-alpine
 
 WORKDIR /app
 
-# Install air for hot reload and swag for API documentation
+# Install air for hot reload, swag for API documentation, sqlc for database code generation, and goose for migrations
 RUN go install github.com/air-verse/air@v1.62.0
 RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -14,6 +16,9 @@ RUN go mod download
 
 # Copy source code
 COPY . .
+
+# Generate database code with sqlc
+RUN sqlc generate
 
 # Expose port
 EXPOSE 8080

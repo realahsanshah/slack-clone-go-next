@@ -1,10 +1,13 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
 
-# Install ca-certificates for SSL
+# Install ca-certificates and tools for SSL and database
 RUN apk --no-cache add ca-certificates git
 
 WORKDIR /app
+
+# Install sqlc for code generation
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -12,8 +15,11 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Copy source code
+# Copy source code and SQL files
 COPY . .
+
+# Generate database code with sqlc
+RUN sqlc generate
 
 # Build the application with optimizations
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \

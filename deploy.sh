@@ -91,11 +91,40 @@ print_status "Starting deployment in $MODE mode..."
 print_status "Stopping existing containers..."
 docker-compose down --remove-orphans
 
+# Function to run database migrations
+run_migrations() {
+    print_status "Running database migrations..."
+    
+    # Wait for database to be ready
+    sleep 5
+    
+    # Run migrations using goose in the api container
+    docker-compose exec -T postgres-migrate goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up || {
+        # If the above fails, try running migrations from the API container
+        print_status "Trying to run migrations from API container..."
+        if [ "$MODE" = "prod" ]; then
+            docker-compose exec -T api-prod goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
+        else
+            docker-compose exec -T api-dev goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
+        fi
+    }
+}
+
 # Build and start services
 if [ "$MODE" = "prod" ]; then
     print_status "Building and starting production services..."
     docker-compose build $BUILD_CACHE api-prod
-    docker-compose up -d postgres api-prod
+    docker-compose up -d postgres
+    
+    # Wait for postgres to be ready
+    print_status "Waiting for PostgreSQL to be ready..."
+    sleep 10
+    
+    # Run migrations
+    run_migrations
+    
+    # Start API service
+    docker-compose up -d api-prod
     
     # Wait for services to be healthy
     print_status "Waiting for services to be healthy..."
@@ -111,7 +140,17 @@ if [ "$MODE" = "prod" ]; then
 else
     print_status "Building and starting development services..."
     docker-compose build $BUILD_CACHE api-dev
-    docker-compose up postgres api-dev
+    docker-compose up -d postgres
+    
+    # Wait for postgres to be ready
+    print_status "Waiting for PostgreSQL to be ready..."
+    sleep 10
+    
+    # Run migrations
+    run_migrations
+    
+    # Start API service
+    docker-compose up api-dev
     
     print_status "Development deployment complete!"
     print_status "API available at: http://localhost:8080"

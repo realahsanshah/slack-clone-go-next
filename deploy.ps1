@@ -82,6 +82,27 @@ Write-Status "Starting deployment in $Mode mode..."
 Write-Status "Stopping existing containers..."
 docker-compose down --remove-orphans
 
+# Function to run database migrations
+function Run-Migrations {
+    Write-Status "Running database migrations..."
+    
+    # Wait for database to be ready
+    Start-Sleep -Seconds 5
+    
+    # Run migrations using goose from the API container
+    try {
+        if ($Mode -eq "prod") {
+            docker-compose exec -T api-prod goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
+        } else {
+            docker-compose exec -T api-dev goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
+        }
+        Write-Status "Database migrations completed successfully!"
+    }
+    catch {
+        Write-Warning-Status "Migration failed, database might already be up to date."
+    }
+}
+
 # Build and start services
 if ($Mode -eq "prod") {
     Write-Status "Building and starting production services..."
@@ -90,7 +111,17 @@ if ($Mode -eq "prod") {
     } else {
         docker-compose build api-prod
     }
-    docker-compose up -d postgres api-prod
+    docker-compose up -d postgres
+    
+    # Wait for postgres to be ready
+    Write-Status "Waiting for PostgreSQL to be ready..."
+    Start-Sleep -Seconds 10
+    
+    # Run migrations
+    Run-Migrations
+    
+    # Start API service
+    docker-compose up -d api-prod
     
     # Wait for services to be healthy
     Write-Status "Waiting for services to be healthy..."
@@ -109,7 +140,17 @@ if ($Mode -eq "prod") {
     } else {
         docker-compose build api-dev
     }
-    docker-compose up postgres api-dev
+    docker-compose up -d postgres
+    
+    # Wait for postgres to be ready
+    Write-Status "Waiting for PostgreSQL to be ready..."
+    Start-Sleep -Seconds 10
+    
+    # Run migrations
+    Run-Migrations
+    
+    # Start API service
+    docker-compose up api-dev
     
     Write-Status "Development deployment complete!"
     Write-Status "API available at: http://localhost:8080"

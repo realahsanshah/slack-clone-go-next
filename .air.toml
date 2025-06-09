@@ -1,9 +1,9 @@
 # .air.toml
 [build]
-  pre_cmd = ["swag init -g cmd/main.go -o ./docs"]
+  pre_cmd = ["sqlc generate", "swag init -g cmd/main.go -o ./docs"]
   cmd = "go run cmd/main.go"
   bin = "tmp/main"
-  include_ext = ["go"]
+  include_ext = ["go", "sql"]
   exclude_dir = ["assets", "tmp", "vendor", "docs"]
   exclude_file = []
   exclude_regex = ["_test.go"]
