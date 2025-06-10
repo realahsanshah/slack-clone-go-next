@@ -89,68 +89,31 @@ print_status "Starting deployment in $MODE mode..."
 
 # Stop and remove existing containers
 print_status "Stopping existing containers..."
-docker-compose down --remove-orphans
-
-# Function to run database migrations
-run_migrations() {
-    print_status "Running database migrations..."
-    
-    # Wait for database to be ready
-    sleep 5
-    
-    # Run migrations using goose in the api container
-    docker-compose exec -T postgres-migrate goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up || {
-        # If the above fails, try running migrations from the API container
-        print_status "Trying to run migrations from API container..."
-        if [ "$MODE" = "prod" ]; then
-            docker-compose exec -T api-prod goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
-        else
-            docker-compose exec -T api-dev goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
-        fi
-    }
-}
+docker compose down --remove-orphans
 
 # Build and start services
 if [ "$MODE" = "prod" ]; then
     print_status "Building and starting production services..."
-    docker-compose build $BUILD_CACHE api-prod
-    docker-compose up -d postgres
+    docker compose build $BUILD_CACHE api-prod
     
-    # Wait for postgres to be ready
-    print_status "Waiting for PostgreSQL to be ready..."
-    sleep 10
-    
-    # Run migrations
-    run_migrations
-    
-    # Start API service
-    docker-compose up -d api-prod
-    
-    # Wait for services to be healthy
-    print_status "Waiting for services to be healthy..."
-    docker-compose ps
+    # Start all services - migrations will run automatically
+    print_status "Starting services including database and migrations..."
+    docker compose up -d
     
     print_status "Production deployment complete!"
     print_warning "Don't forget to:"
-    print_warning "1. Change JWT_SECRET in docker-compose.yml"
+    print_warning "1. Change JWT_SECRET in docker compose.yml"
     print_warning "2. Use environment-specific database credentials"
     print_warning "3. Set up proper SSL/TLS termination"
     print_warning "4. Configure proper backup strategy"
     
 else
     print_status "Building and starting development services..."
-    docker-compose build $BUILD_CACHE api-dev
-    docker-compose up -d postgres
+    docker compose build $BUILD_CACHE api-dev
     
-    # Wait for postgres to be ready
-    print_status "Waiting for PostgreSQL to be ready..."
-    sleep 10
-    
-    # Run migrations
-    run_migrations
-    
-    # Start API service
-    docker-compose up api-dev
+    # Start all services - migrations will run automatically
+    print_status "Starting services including database and migrations..."
+    docker compose up
     
     print_status "Development deployment complete!"
     print_status "API available at: http://localhost:8080"
@@ -159,10 +122,10 @@ fi
 
 # Show running containers
 print_status "Running containers:"
-docker-compose ps
+docker compose ps
 
 # Show logs
 print_status "Recent logs:"
-docker-compose logs --tail=20
+docker compose logs --tail=20
 
-print_status "Deployment finished! Use 'docker-compose logs -f' to follow logs." 
+print_status "Deployment finished! Use 'docker compose logs -f' to follow logs." 

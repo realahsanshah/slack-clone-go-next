@@ -80,52 +80,20 @@ Write-Status "Starting deployment in $Mode mode..."
 
 # Stop and remove existing containers
 Write-Status "Stopping existing containers..."
-docker-compose down --remove-orphans
-
-# Function to run database migrations
-function Run-Migrations {
-    Write-Status "Running database migrations..."
-    
-    # Wait for database to be ready
-    Start-Sleep -Seconds 5
-    
-    # Run migrations using goose from the API container
-    try {
-        if ($Mode -eq "prod") {
-            docker-compose exec -T api-prod goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
-        } else {
-            docker-compose exec -T api-dev goose -dir sql/schema postgres "postgres://postgres:postgres123@postgres:5432/slackclone?sslmode=disable" up
-        }
-        Write-Status "Database migrations completed successfully!"
-    }
-    catch {
-        Write-Warning-Status "Migration failed, database might already be up to date."
-    }
-}
+docker compose down --remove-orphans
 
 # Build and start services
 if ($Mode -eq "prod") {
     Write-Status "Building and starting production services..."
     if ($BuildCache) {
-        docker-compose build $BuildCache api-prod
+        docker compose build $BuildCache api-prod
     } else {
-        docker-compose build api-prod
+        docker compose build api-prod
     }
-    docker-compose up -d postgres
     
-    # Wait for postgres to be ready
-    Write-Status "Waiting for PostgreSQL to be ready..."
-    Start-Sleep -Seconds 10
-    
-    # Run migrations
-    Run-Migrations
-    
-    # Start API service
-    docker-compose up -d api-prod
-    
-    # Wait for services to be healthy
-    Write-Status "Waiting for services to be healthy..."
-    docker-compose ps
+    # Start all services - migrations will run automatically
+    Write-Status "Starting services including database and migrations..."
+    docker compose up -d
     
     Write-Status "Production deployment complete!"
     Write-Warning-Status "Don't forget to:"
@@ -136,21 +104,14 @@ if ($Mode -eq "prod") {
 } else {
     Write-Status "Building and starting development services..."
     if ($BuildCache) {
-        docker-compose build $BuildCache api-dev
+        docker compose build $BuildCache api-dev
     } else {
-        docker-compose build api-dev
+        docker compose build api-dev
     }
-    docker-compose up -d postgres
     
-    # Wait for postgres to be ready
-    Write-Status "Waiting for PostgreSQL to be ready..."
-    Start-Sleep -Seconds 10
-    
-    # Run migrations
-    Run-Migrations
-    
-    # Start API service
-    docker-compose up api-dev
+    # Start all services - migrations will run automatically
+    Write-Status "Starting services including database and migrations..."
+    docker compose up
     
     Write-Status "Development deployment complete!"
     Write-Status "API available at: http://localhost:8080"
@@ -159,10 +120,10 @@ if ($Mode -eq "prod") {
 
 # Show running containers
 Write-Status "Running containers:"
-docker-compose ps
+docker compose ps
 
 # Show logs
 Write-Status "Recent logs:"
-docker-compose logs --tail=20
+docker compose logs --tail=20
 
-Write-Status "Deployment finished! Use 'docker-compose logs -f' to follow logs." 
+Write-Status "Deployment finished! Use 'docker compose logs -f' to follow logs." 
